@@ -1,0 +1,217 @@
+--audit triggers--
+
+--terem audit trigger--
+CREATE OR REPLACE TRIGGER trg_terem_audit
+AFTER INSERT OR UPDATE OR DELETE ON terem
+FOR EACH ROW
+BEGIN
+    INSERT INTO terem_audit (
+        audit_id,
+        terem_id,
+        muvelet,
+        muvelet_ideje,
+        felhasznalo,
+        eredeti_adat
+    )
+    VALUES (
+        audit_seq.NEXTVAL,                             -- Egyedi azonosító az audit táblához
+        CASE 
+            WHEN INSERTING THEN :NEW.id                -- Beszúráskor az új rekord id-ja
+            WHEN UPDATING OR DELETING THEN :OLD.id     -- Frissítés/törlés esetén a régi rekord id-ja
+        END,
+        CASE
+            WHEN INSERTING THEN 'INSERT'              -- Mûvelet típusa
+            WHEN UPDATING THEN 'UPDATE'
+            WHEN DELETING THEN 'DELETE'
+        END,
+        SYSDATE,                                      -- Mûvelet idõpontja
+        USER,                                         -- Mûveletet végrehajtó felhasználó
+        CASE
+            WHEN UPDATING OR DELETING THEN 
+                'Nev: ' || :OLD.nev || ', Kapacitas: ' || :OLD.kapacitas || ', Tipus: ' || :OLD.tipus
+            ELSE NULL
+        END                                           -- Eredeti adat frissítéshez/törléshez
+    );
+END;
+/
+
+--esemeny-tipus audit trigger--
+CREATE OR REPLACE TRIGGER trg_esemeny_tipus_audit
+AFTER INSERT OR UPDATE OR DELETE ON esemeny_tipus
+FOR EACH ROW
+BEGIN
+    INSERT INTO esemeny_tipus_audit (
+        audit_id,
+        esemeny_id,
+        muvelet,
+        muvelet_ideje,
+        felhasznalo,
+        eredeti_adat
+    )
+    VALUES (
+        audit_seq.NEXTVAL,
+        NVL(:OLD.id, :NEW.id),
+        CASE
+            WHEN INSERTING THEN 'INSERT'
+            WHEN UPDATING THEN 'UPDATE'
+            WHEN DELETING THEN 'DELETE'
+        END,
+        SYSDATE,
+        USER,
+        CASE
+            WHEN UPDATING OR DELETING THEN 'Nev: ' || :OLD.nev
+            ELSE NULL
+        END
+    );
+END;
+/
+--tanar audit trigger--
+CREATE OR REPLACE TRIGGER trg_tanar_audit
+AFTER INSERT OR UPDATE OR DELETE ON tanar
+FOR EACH ROW
+BEGIN
+    INSERT INTO tanar_audit (
+        audit_id,
+        tanar_id,
+        muvelet,
+        muvelet_ideje,
+        felhasznalo,
+        eredeti_adat
+    )
+    VALUES (
+        audit_seq.NEXTVAL,
+        NVL(:OLD.id, :NEW.id),
+        CASE
+            WHEN INSERTING THEN 'INSERT'
+            WHEN UPDATING THEN 'UPDATE'
+            WHEN DELETING THEN 'DELETE'
+        END,
+        SYSDATE,
+        USER,
+        CASE
+            WHEN UPDATING OR DELETING THEN 'Nev: ' || :OLD.nev || ', Szak: ' || :OLD.szak
+            ELSE NULL
+        END
+    );
+END;
+/
+--kurzus audit trigger--
+CREATE OR REPLACE TRIGGER trg_kurzus_audit
+AFTER INSERT OR UPDATE OR DELETE ON kurzus
+FOR EACH ROW
+BEGIN
+    INSERT INTO kurzus_audit (
+        audit_id,
+        kurzus_id,
+        muvelet,
+        muvelet_ideje,
+        felhasznalo,
+        eredeti_adat
+    )
+    VALUES (
+        audit_seq.NEXTVAL,
+        NVL(:OLD.id, :NEW.id),
+        CASE
+            WHEN INSERTING THEN 'INSERT'
+            WHEN UPDATING THEN 'UPDATE'
+            WHEN DELETING THEN 'DELETE'
+        END,
+        SYSDATE,
+        USER,
+        CASE
+            WHEN UPDATING OR DELETING THEN 'Nev: ' || :OLD.nev || ', Tanar_ID: ' || :OLD.tanar_id
+            ELSE NULL
+        END
+    );
+END;
+/
+--kurzus_terem audit trigger--
+CREATE OR REPLACE TRIGGER trg_kurzus_terem_audit
+AFTER INSERT OR UPDATE OR DELETE ON kurzus_terem
+FOR EACH ROW
+BEGIN
+    INSERT INTO kurzus_terem_audit (
+        audit_id,
+        kapcsolat_id,
+        muvelet,
+        muvelet_ideje,
+        felhasznalo,
+        eredeti_adat
+    )
+    VALUES (
+        audit_seq.NEXTVAL,
+        NVL(:OLD.id, :NEW.id),
+        CASE
+            WHEN INSERTING THEN 'INSERT'
+            WHEN UPDATING THEN 'UPDATE'
+            WHEN DELETING THEN 'DELETE'
+        END,
+        SYSDATE,
+        USER,
+        CASE
+            WHEN UPDATING OR DELETING THEN 'Kurzus_ID: ' || :OLD.kurzus_id || ', Terem_ID: ' || :OLD.terem_id
+            ELSE NULL
+        END
+    );
+END;
+/
+--foglalas audit trigger--
+CREATE OR REPLACE TRIGGER trg_foglalas_audit
+AFTER INSERT OR UPDATE OR DELETE ON foglalas
+FOR EACH ROW
+BEGIN
+    INSERT INTO foglalas_audit (
+        audit_id,
+        foglalas_id,
+        muvelet,
+        muvelet_ideje,
+        felhasznalo,
+        eredeti_adat
+    )
+    VALUES (
+        audit_seq.NEXTVAL,
+        NVL(:OLD.id, :NEW.id),
+        CASE
+            WHEN INSERTING THEN 'INSERT'
+            WHEN UPDATING THEN 'UPDATE'
+            WHEN DELETING THEN 'DELETE'
+        END,
+        SYSDATE,
+        USER,
+        CASE
+            WHEN UPDATING OR DELETING THEN 'Terem_ID: ' || :OLD.terem_id || ', Datum: ' || TO_CHAR(:OLD.datum, 'YYYY-MM-DD') || ', Eloadas: ' || :OLD.esemeny_nev
+            ELSE NULL
+        END
+    );
+END;
+/
+--foglalas_tanar audit trigger--
+CREATE OR REPLACE TRIGGER trg_foglalas_tanar_audit
+AFTER INSERT OR UPDATE OR DELETE ON foglalas_tanar
+FOR EACH ROW
+BEGIN
+    INSERT INTO foglalas_tanar_audit (
+        audit_id,
+        kapcsolat_id,
+        muvelet,
+        muvelet_ideje,
+        felhasznalo,
+        eredeti_adat
+    )
+    VALUES (
+        audit_seq.NEXTVAL,
+        NVL(:OLD.id, :NEW.id),
+        CASE
+            WHEN INSERTING THEN 'INSERT'
+            WHEN UPDATING THEN 'UPDATE'
+            WHEN DELETING THEN 'DELETE'
+        END,
+        SYSDATE,
+        USER,
+        CASE
+            WHEN UPDATING OR DELETING THEN 'Foglalas_ID: ' || :OLD.foglalas_id || ', Tanar_ID: ' || :OLD.tanar_id
+            ELSE NULL
+        END
+    );
+END;
+/
